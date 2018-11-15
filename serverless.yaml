@@ -1,0 +1,79 @@
+# serverless.yml
+service: messaging
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 512 # optional, in MB, default is 1024
+  versionFunctions: false # optional, default is true
+
+functions:
+  publishMessage:
+    handler: handler.publishMessage # required, handler set in AWS Lambda
+    name: ${self:provider.stage}-publishMessage # optional, Deployed Lambda name
+    description: Description of what the lambda function does # optional, Description to publish to AWS
+    events:
+    - http:
+        method: post
+        path: messages
+  subscribeMessage:
+    handler: handler.subscribeMessage # required, handler set in AWS Lambda
+    name: ${self:provider.stage}-subscribeMessage # optional, Deployed Lambda name
+    description: Description of what the lambda function does # optional, Description to publish to AWS
+    events:
+    - sns: arn:aws:sns:us-east-1:450119628579:messagingDevTopic
+
+resources:
+  Resources:
+    joylimNotificationsMasterDynamodb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: joylim-notifications-master-dynamodb
+        KeySchema:
+        - AttributeName: applicationId
+          KeyType: HASH
+        - AttributeName: messageId
+          KeyType: RANGE
+        AttributeDefinitions:
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: messageId
+          AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    joylimUserNotificationByScheduleTimeDynamodb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: joylim-usernotificationsbyschedule-master-dynamodb
+        KeySchema:
+        - AttributeName: applicationIdUserId
+          KeyType: HASH
+        - AttributeName: scheduleTime
+          KeyType: RANGE
+        AttributeDefinitions:
+        - AttributeName: applicationIdUserId
+          AttributeType: S
+        - AttributeName: scheduleTime
+          AttributeType: N
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    joylimUserNotificationByMessageIdDynamodb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: joylim-usernotificationsbymessageid-master-dynamodb
+        KeySchema:
+        - AttributeName: applicationIdUserId
+          KeyType: HASH
+        - AttributeName: messageId
+          KeyType: RANGE
+        AttributeDefinitions:
+        - AttributeName: applicationIdUserId
+          AttributeType: S
+        - AttributeName: messageId
+          AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
